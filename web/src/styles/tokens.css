@@ -1,0 +1,70 @@
+/* ==========================================================================
+   Traço e Sombra — tokens v0.1  ·  dashboard EUROCLIMA
+   Papel e tinta. Controle é grosso, dado é fino. A luz vem sempre de cima.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  /* papel e tinta (o resto é apoio, nunca carrega significado sozinho) */
+  --papel: #ffffff;
+  --tinta: #000000;
+  --cinza-1: #f4f4f4; /* fundos suaves, zebra */
+  --cinza-2: #d9d9d9; /* divisórias de 1 px */
+  --cinza-3: #a6a6a6; /* só decoração e estado desabilitado */
+  --cinza-4: #595959; /* texto secundário (passa AA) */
+  --cinza-5: #262626; /* tinta suave */
+
+  /* tipografia: sans (títulos, texto, botões e números) · serifa (destaque) · mono (dados) */
+  --f-titulo: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-editorial: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --f-dados: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --t-hero: clamp(3.6rem, 12vw, 8rem);
+  --t-h1: clamp(2.1rem, 5.2vw, 3.4rem);
+  --t-h2: clamp(1.45rem, 3vw, 2rem);
+  --t-h3: 1.2rem;
+  --t-corpo: 1rem;
+  --t-peq: 0.875rem;
+  --t-rotulo: 0.72rem;
+
+  /* traço: controle é grosso, dado é fino */
+  --traco: 3px;
+  --fio: 1px;
+  --prof: 8px; /* profundidade da sombra e da extrusão dos botões */
+  --raio: 14px;
+
+  /* sombra "desenhada" em hachura (usada na base de botões primários) */
+  --hachura: repeating-linear-gradient(135deg, var(--tinta) 0 1.5px, var(--papel) 1.5px 4px);
+
+  /* movimento: curto, simples, com mola só onde há objeto físico */
+  --dur-toque: 80ms;
+  --dur-solta: 200ms;
+  --dur-entra: 380ms;
+  --dur-formigas: 900ms;
+  --ease-toque: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-mola: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --largura: 1180px;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+
+/* Tema invertido: tinta branca sobre papel preto. A cobertura de tinta (texturas)
+   continua significando "mais" — por isso as texturas não precisam ser reescolhidas. */
+[data-tema="escuro"] {
+  color-scheme: dark;
+  --papel: #000000;
+  --tinta: #ffffff;
+  --cinza-1: #141414;
+  --cinza-2: #2e2e2e;
+  --cinza-3: #6b6b6b;
+  --cinza-4: #b3b3b3;
+  --cinza-5: #dedede;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-toque: 0.01ms;
+    --dur-solta: 0.01ms;
+    --dur-entra: 0.01ms;
+  }
+}
