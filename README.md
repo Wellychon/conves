@@ -1,6 +1,6 @@
 # Convés
 
-Contexto compartilhado, presença, kanban e grafo da **Piena** (Welly + Jorge), conectado ao Claude Code por MCP.
+Contexto compartilhado para times pequenos que trabalham com o Claude Code: notas em Markdown sincronizadas, presença, kanban e grafo, tudo conectado por MCP. Construído com Supabase, Next.js e um CLI sem dependências.
 
 ```
 Claude Code ─MCP/HTTP─► Edge Function "mcp" ─► Postgres (Supabase) ◄─Realtime─► Web (Vercel)
@@ -8,7 +8,7 @@ Claude Code ─MCP/HTTP─► Edge Function "mcp" ─► Postgres (Supabase) ◄
      └── CLI `conves` ◄── pasta local (Obsidian) ◄───┘
 ```
 
-- `supabase/migrations/` — schema, RLS, funções (aplicadas no projeto `conves`).
+- `supabase/migrations/` — schema, RLS, funções (aplique-as no seu projeto Supabase).
 - `supabase/functions/mcp/` — servidor MCP v2: **5 ferramentas** (`ctx`, `note`, `card`, `log`, `me`) + **prompts** que viram comandos de barra (`/mcp__conves__minhas`, `resolver`, `concluir`, `quadro`, `aprender`).
 - `cli/conves.mjs` — sync bidirecional, hooks (`hook prompt|touch|stop`, `digest`), modo `privado` e `daemon install|uninstall|status` (launchd, opcional). Sem dependências (Node 20+).
 - `web/` — kanban, grafo, notas, equipe e decisões (Next.js 16, identidade **Traço e Sombra**, sem Tailwind).
@@ -26,16 +26,16 @@ cd web && npm install && npm run dev      # http://localhost:3000
 - **Quadro:** arrastar entre colunas (Realtime), painel de edição, filtro por pessoa. Colunas se distinguem por textura: mais tinta = mais perto de feito.
 - **Grafo:** `d3-force` em SVG; textura por tipo de nota, hover isola vizinhança, arrastar nós, zoom, aba "Lista" (tabela gêmea).
 - **Notas:** busca full-text em português, prévia markdown, editor com controle de versão (conflito nunca sobrescreve).
-- **Estilos:** `src/styles/tokens.css` e `componentes.css` vêm de `Euroclima/…/identidade/` (sem o bloco de mapas); `app.css` é do Convés.
+- **Estilos:** `src/styles/tokens.css` e `componentes.css` definem a identidade visual (**Traço e Sombra**); `app.css` é específico do Convés.
 
 ### Deploy na Vercel (projeto `web/`, configure `NEXT_PUBLIC_SUPABASE_URL` e a chave publicável)
 
-1. Importar `Conves/web` (Root Directory = `web`), framework Next.js.
+1. Importar este repositório (Root Directory = `web`), framework Next.js.
 2. Variáveis: as duas `NEXT_PUBLIC_*` acima.
 3. No Supabase → Authentication → URL Configuration: **Site URL** e **Redirect URLs** com o domínio da Vercel (e `http://localhost:3000` para dev).
-4. E-mail de login: o SMTP padrão do Supabase só envia para membros da organização Supabase e tem limite baixo. Para o Jorge receber o link, convide-o na organização ou configure um SMTP próprio.
+4. E-mail de login: o SMTP padrão do Supabase só envia para membros da organização Supabase e tem limite baixo. Para outras pessoas receberem o link, convide-as na organização ou configure um SMTP próprio.
 
-## Instalar numa máquina nova (ex.: Jorge)
+## Instalar numa máquina nova
 
 1. Receber um **token pessoal** (criado por quem administra; só o hash fica no banco).
 2. Criar `~/.conves/config.json` (permissão 600):
