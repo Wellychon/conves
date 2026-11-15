@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convés · contexto compartilhado para times com Claude Code</title>
+<meta name="description" content="Convés mantém notas em Markdown, quadro, grafo e presença da equipe sincronizados e disponíveis para o Claude Code por MCP. Código aberto, licença MIT.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Convés · contexto compartilhado para times com Claude Code">
+<meta property="og:description" content="Notas, quadro, grafo e presença da equipe, conectados ao Claude Code por MCP.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 56'%3E%3Crect width='48' height='56' fill='%23fff'/%3E%3Cpath d='M24 6v24M24 9l15 17H24z' fill='%23fff' stroke='%23000' stroke-width='3.5' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M5 30h38l-7 20H12z' fill='%23fff' stroke='%23000' stroke-width='3.5' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Traço e Sombra: papel e tinta. Controle é grosso (3 px, sombra dura), dado é fino (1 px). */
+:root {
+  color-scheme: light dark;
+  --papel: #fff; --tinta: #000;
+  --cinza-1: #f4f4f4; --cinza-2: #d9d9d9; --cinza-4: #595959;
+  --f-titulo: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-editorial: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --f-dados: "Space Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --traco: 3px; --fio: 1px; --prof: 8px;
+  --hachura: repeating-linear-gradient(135deg, var(--tinta) 0 1.5px, var(--papel) 1.5px 4px);
+  --gutter: clamp(20px, 4.5vw, 64px);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --papel: #000; --tinta: #fff; --cinza-1: #141414; --cinza-2: #2e2e2e; --cinza-4: #b3b3b3; }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--papel); color: var(--tinta); font: 400 1.125rem/1.55 var(--f-titulo); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+::selection { background: var(--tinta); color: var(--papel); }
+:focus-visible { outline: 3px dashed var(--tinta); outline-offset: 5px; border-radius: 4px; }
+code { font: 700 .84em var(--f-dados); background: var(--cinza-1); border: var(--fio) solid var(--cinza-2); border-radius: 4px; padding: .1em .35em; }
+.pular { position: absolute; left: 12px; top: -90px; z-index: 10; background: var(--tinta); color: var(--papel); padding: 10px 16px; border-radius: 10px; font-weight: 700; }
+.pular:focus { top: 12px; }
+.sub { color: var(--cinza-4); }
+.rotulo { font: 700 .72rem/1.2 var(--f-dados); letter-spacing: .1em; text-transform: uppercase; }
+.wrap { padding-inline: var(--gutter); }
+
+/* cabeçalho */
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; padding: 20px var(--gutter); }
+.marca { display: inline-flex; align-items: center; gap: 12px; min-height: 56px; text-decoration: none; font: 800 1.7rem/1 var(--f-titulo); letter-spacing: -.03em; }
+.marca svg { width: 30px; height: 35px; color: var(--tinta); }
+nav { display: flex; flex-wrap: wrap; gap: 0 28px; font-size: 1rem; }
+nav a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+
+/* botão: face que afunda sobre uma base em hachura */
+.btn { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: .55em; min-height: 52px; padding: .62em 1.35em; margin-bottom: var(--prof);
+  --face: var(--papel); --base: var(--papel); --letra: var(--tinta);
+  font: 700 1rem/1.1 var(--f-titulo); text-decoration: none; color: var(--letra); background: none; border: 0; padding-inline: calc(1.35em + var(--traco));
+  border-radius: 15px 19px 14px 18px / 18px 14px 19px 15px; transition: transform .2s cubic-bezier(.34, 1.56, .64, 1); }
+/* face (::before) fica acima da base (::after); o rótulo fica acima das duas */
+.btn::before, .btn::after { content: ""; position: absolute; inset: 0; border: var(--traco) solid var(--tinta); border-radius: inherit; }
+.btn::before { z-index: -1; background: var(--face); }
+.btn::after { z-index: -2; transform: translateY(var(--prof)); background: var(--base); }
+.btn--primario { --face: var(--tinta); --letra: var(--papel); --base: var(--hachura); }
+.btn:active { transform: translateY(var(--prof)); transition-duration: .08s; }
+.btn svg { width: 1.2em; height: 1.2em; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* hero */
+#topo { padding: clamp(72px, 12vw, 128px) var(--gutter) 96px; display: flex; flex-direction: column; gap: 48px; }
+h1 { font: 400 clamp(3.4rem, 10.5vw, 9.5rem)/.94 var(--f-editorial); letter-spacing: -.03em; text-wrap: balance; }
+h1 em { font-style: italic; }
+.hero-base { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px; }
+.hero-base p { max-width: 36rem; font-size: 1.25rem; line-height: 1.5; text-wrap: pretty; }
+.acoes { display: flex; flex-wrap: wrap; gap: 16px 18px; }
+.tres { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px 24px; margin-top: 24px; }
+.tres > div { border-top: var(--fio) solid var(--cinza-2); padding-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+.tres h3 { font-size: 1.125rem; font-weight: 700; }
+.tres p { font-size: 1rem; text-wrap: pretty; }
+
+/* seções numeradas */
+section.s { padding: 104px var(--gutter); }
+.s-grade { display: flex; flex-wrap: wrap; gap: 32px 24px; border-top: var(--traco) solid var(--tinta); padding-top: 20px; }
+.s-num { flex: 1 1 200px; display: flex; gap: 16px; font: 700 .9rem/1.4 var(--f-dados); }
+.s-num span:first-child { color: var(--cinza-4); }
+.s-corpo { flex: 4 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+h2 { font: 400 clamp(2.3rem, 4.8vw, 4.2rem)/1.05 var(--f-editorial); letter-spacing: -.02em; max-width: 18em; text-wrap: balance; }
+h2 em { font-style: italic; }
+.linhas { border-bottom: var(--fio) solid var(--cinza-2); }
+.linha { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; border-top: var(--fio) solid var(--cinza-2); padding: 24px 0; }
+.linha > :first-child { flex: 1 1 200px; font-size: 1.25rem; font-weight: 700; }
+.linha > p { flex: 2 1 360px; text-wrap: pretty; }
+.linha .n { font: 700 .9rem/1.4 var(--f-dados); color: var(--cinza-4); margin-right: 12px; }
+
+/* cartões do bloco de instalação */
+.cartao { background: var(--cinza-1); border: var(--traco) solid var(--tinta); border-radius: 14px; padding: 24px; box-shadow: 0 var(--prof) 0 var(--tinta); }
+pre { margin: 0; overflow-x: auto; font: 400 .92rem/1.7 var(--f-dados); }
+pre b { font-weight: 700; }
+.cmt { color: var(--cinza-4); }
+.stack { display: flex; flex-wrap: wrap; gap: 10px; }
+.stack li { border: 2px solid var(--tinta); border-radius: 10px; padding: 6px 14px; font: 700 .8rem/1.2 var(--f-dados); letter-spacing: .04em; }
+
+/* convite final */
+#codigo .fim { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 32px; }
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; padding: 28px var(--gutter) 40px; border-top: var(--fio) solid var(--cinza-2); font-size: .95rem; }
+footer a { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+@media (max-width: 560px) { .btn { width: 100%; } section.s { padding-block: 72px; } }
+</style>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header>
+  <a class="marca" href="#topo" aria-label="Convés">
+    <svg viewBox="0 0 48 56" aria-hidden="true">
+      <path d="M24 6v24M24 9l15 17H24z" fill="var(--papel)" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M5 30h38l-7 20H12z" fill="var(--papel)" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M13 38q4.5-5 9 0t9 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    convés
+  </a>
+  <nav aria-label="Seções">
+    <a href="#problema">Problema</a>
+    <a href="#produto">Produto</a>
+    <a href="#seguranca">Segurança</a>
+    <a href="#codigo">Código aberto</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+<section id="topo">
+  <div class="rotulo sub">Contexto compartilhado para times com Claude Code</div>
+  <h1>A equipe inteira,<br><em>no mesmo convés.</em></h1>
+  <div class="hero-base">
+    <p class="sub">Convés mantém suas notas em Markdown, o quadro, o grafo e a presença da equipe sincronizados, e entrega isso ao Claude Code por MCP, para que cada sessão comece sabendo o que o time já decidiu.</p>
+    <div class="acoes">
+      <a class="btn btn--primario" href="https://github.com/Wellychon/conves">Ver no GitHub
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="#produto">Como funciona</a>
+    </div>
+  </div>
+  <div class="tres">
+    <div><h3>Notas</h3><p class="sub">Sua pasta de Markdown, ou do Obsidian, sincronizada com a nuvem nos dois sentidos e sem sobrescrever ninguém.</p></div>
+    <div><h3>Quadro e grafo</h3><p class="sub">Kanban em tempo real, grafo das notas e registro de decisões, tudo no navegador.</p></div>
+    <div><h3>Claude Code</h3><p class="sub">Um servidor MCP com poucas ferramentas e comandos de barra, desenhado para gastar poucos tokens.</p></div>
+  </div>
+</section>
+
+<section class="s" id="problema">
+  <div class="s-grade">
+    <div class="s-num"><span>01</span><span>Problema</span></div>
+    <div class="s-corpo">
+      <h2>Cada sessão do Claude começa <em>do zero</em>, e o time se repete.</h2>
+      <div class="linhas">
+        <div class="linha"><div>Contexto</div><p class="sub">O que a equipe decidiu ontem mora em notas, conversas e na cabeça de cada pessoa. A IA não vê nada disso.</p></div>
+        <div class="linha"><div>Duplicação</div><p class="sub">Duas pessoas pedem a mesma coisa ao Claude sem saber, porque ninguém vê o que o outro está fazendo.</p></div>
+        <div class="linha"><div>Decisões</div><p class="sub">A decisão fica perdida num chat. Meses depois, ninguém lembra do porquê.</p></div>
+        <div class="linha"><div>Custo</div><p class="sub">Colar contexto à mão em cada pedido gasta tokens e atenção.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="produto">
+  <div class="s-grade">
+    <div class="s-num"><span>02</span><span>Produto</span></div>
+    <div class="s-corpo">
+      <h2>As notas ficam onde você já escreve. O resto <em>acompanha.</em></h2>
+      <ol class="linhas">
+        <li class="linha"><div><span class="n">1</span>Sincroniza</div><p class="sub">O CLI <code>conves sync</code> mantém a pasta local e a nuvem iguais, a cada 5 segundos e ao salvar. Se a mesma nota mudar dos dois lados, a versão da nuvem vai para um arquivo <code>.conflito</code> e nada é sobrescrito.</p></li>
+        <li class="linha"><div><span class="n">2</span>Compartilha</div><p class="sub">Postgres com Realtime no Supabase. O quadro, a presença e o que cada pessoa está fazendo aparecem para todos, sem recarregar.</p></li>
+        <li class="linha"><div><span class="n">3</span>Conecta</div><p class="sub">O servidor MCP expõe as ferramentas <code>ctx</code>, <code>note</code>, <code>card</code>, <code>log</code>, <code>cal</code> e <code>me</code>, e comandos de barra como <code>/mcp__conves__minhas</code> e <code>/mcp__conves__quadro</code>.</p></li>
+        <li class="linha"><div><span class="n">4</span>Economiza</div><p class="sub">Sincronização, arquivamento por tipo e vínculo entre card e nota rodam por hook e por trigger no banco, sem gastar token. O resumo do que mudou só aparece quando mudou.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="seguranca">
+  <div class="s-grade">
+    <div class="s-num"><span>03</span><span>Segurança</span></div>
+    <div class="s-corpo">
+      <h2>Texto de outras pessoas é <em>dado</em>, nunca ordem.</h2>
+      <div class="linhas">
+        <div class="linha"><div>Tokens pessoais</div><p class="sub">Cada pessoa usa o seu, revogável. O banco guarda apenas o hash SHA-256.</p></div>
+        <div class="linha"><div>Acesso por allowlist</div><p class="sub">Row Level Security em todas as tabelas. Só entram os e-mails cadastrados como membros.</p></div>
+        <div class="linha"><div>Conteúdo não confiável</div><p class="sub">Notas e cards entram no contexto do Claude dentro de um bloco marcado como dado, que o próprio texto não consegue fechar.</p></div>
+        <div class="linha"><div>Sincronização restrita</div><p class="sub">Caminhos vindos da nuvem não saem da pasta do vault e não tocam em pastas ocultas como <code>.claude</code> e <code>.git</code>.</p></div>
+        <div class="linha"><div>Modo privado</div><p class="sub">Um comando e o que você faz deixa de aparecer para o resto do time.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="codigo">
+  <div class="s-grade">
+    <div class="s-num"><span>04</span><span>Código aberto</span></div>
+    <div class="s-corpo">
+      <h2>Rode no seu <em>projeto Supabase.</em></h2>
+      <div class="cartao" role="group" aria-label="Instalação">
+<pre><span class="cmt"># 1. clone e suba o site</span>
+<b>git clone</b> https://github.com/Wellychon/conves.git
+<b>cd</b> conves/web &amp;&amp; <b>npm install</b> &amp;&amp; <b>npm run dev</b>
+
+<span class="cmt"># 2. na sua máquina, sincronize as notas</span>
+<b>node</b> cli/conves.mjs sync --watch</pre>
+      </div>
+      <ul class="stack" aria-label="Tecnologias">
+        <li>Next.js 16</li><li>Supabase</li><li>Postgres + RLS</li><li>MCP</li><li>Node 20+ sem dependências</li><li>MIT</li>
+      </ul>
+      <div class="fim">
+        <p class="sub" style="max-width:34rem">O passo a passo completo, com variáveis de ambiente, deploy na Vercel e instalação em uma segunda máquina, está no README.</p>
+        <div class="acoes">
+          <a class="btn btn--primario" href="https://github.com/Wellychon/conves">Abrir o repositório
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <span>convés</span>
+  <span class="sub">Licença MIT · © 2026 Welly</span>
+  <a href="https://github.com/Wellychon/conves">github.com/Wellychon/conves</a>
+</footer>
+</body>
+</html>
