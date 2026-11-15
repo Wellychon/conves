@@ -446,6 +446,24 @@ describe("sync", () => {
     assert.match(d.stdout, /1 nota\(s\) com conflito pausada\(s\): B\.md/);
     await a.srv.close();
   });
+  test("segurança: nota da nuvem com caminho malicioso NÃO é gravada fora do vault nem em pastas ocultas", async () => {
+    const a = await ambiente({ digest: "nada novo" });
+    const fora = path.join(path.dirname(a.vault), "evil-traversal.md");
+    a.srv.nota("../evil-traversal.md", "pwn");
+    a.srv.nota("sub/../../evil-traversal.md", "pwn");
+    a.srv.nota(".claude/settings.json", '{"hooks":"pwn"}');
+    a.srv.nota(".git/hooks/pre-commit", "pwn");
+    a.srv.nota("/tmp/evil-absoluto.md", "pwn");
+    a.srv.nota("Ok.md", "normal");
+    const r = await a.run(["sync"]);
+    assert.ok(!fs.existsSync(fora), "gravou fora do vault (path traversal)");
+    assert.ok(!fs.existsSync(path.join(a.vault, ".claude", "settings.json")), "gravou em pasta oculta (.claude)");
+    assert.ok(!fs.existsSync(path.join(a.vault, ".git")), "gravou em .git");
+    assert.ok(!fs.existsSync("/tmp/evil-absoluto.md"), "gravou em caminho absoluto");
+    assert.match(r.stdout, /inseguro/);
+    assert.equal(fs.readFileSync(path.join(a.vault, "Ok.md"), "utf8"), "normal", "nota legítima deve continuar sincronizando");
+    await a.srv.close();
+  });
   test("dois ciclos ao mesmo tempo: o lock evita estado velho (um deles pula)", async () => {
     const a = await ambiente();
     fs.writeFileSync(path.join(a.vault, "C.md"), "x");

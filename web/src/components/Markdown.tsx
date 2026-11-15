@@ -1,5 +1,6 @@
 "use client";
 import { Fragment, type ReactNode } from "react";
+import { urlSegura } from "@/lib/urlSegura";
 
 /** Prévia markdown mínima e segura (sem HTML cru): títulos, listas, tabelas, código, negrito, [[wikilinks]]. */
 export function Markdown({ texto, aoAbrirNota }: { texto: string; aoAbrirNota: (alvo: string) => void }) {
@@ -18,7 +19,12 @@ export function Markdown({ texto, aoAbrirNota }: { texto: string; aoAbrirNota: (
         return <button key={k} type="button" className="linha-btn" onClick={() => aoAbrirNota(alvo.split("#")[0].trim())}>{(rotulo ?? alvo).trim()}</button>;
       }
       const l = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (l) return <a key={k} href={l[2]} target="_blank" rel="noreferrer noopener">{l[1]}</a>;
+      if (l) {
+        const url = urlSegura(l[2]);
+        return url
+          ? <a key={k} href={url} target="_blank" rel="noreferrer noopener">{l[1]}</a>
+          : <Fragment key={k}>{l[1]}</Fragment>; // esquema perigoso (javascript:, data:…): mostra só o texto
+      }
       return <Fragment key={k}>{p}</Fragment>;
     });
 

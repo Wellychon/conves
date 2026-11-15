@@ -4,6 +4,7 @@ import { Icone } from "@/components/Defs";
 import { useApp } from "@/components/Shell";
 import { useTable } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
+import { urlSegura } from "@/lib/urlSegura";
 import { tocar } from "@/lib/som";
 import { dataCurta, TIPOS_EVENTO, type Card, type Decision, type Evento, type TipoEvento } from "@/lib/types";
 
@@ -20,8 +21,9 @@ type Item = { dia: string; fim?: string | null; texto: string; tipo: TipoEvento 
 function Chip({ i }: { i: Item }) {
   const corpo = <><span className="cal-chip__t">{i.tipo === "card" ? "card" : i.tipo === "decisao" ? "rever" : i.tipo}</span> {i.texto}</>;
   const cls = `cal-chip cal-chip--${i.tipo}${i.feito ? " cal-chip--feito" : ""}`;
-  return i.link
-    ? <a className={cls} href={i.link} target="_blank" rel="noreferrer noopener" title={i.texto}>{corpo}</a>
+  const link = urlSegura(i.link);
+  return link
+    ? <a className={cls} href={link} target="_blank" rel="noreferrer noopener" title={i.texto}>{corpo}</a>
     : <span className={cls} title={i.texto}>{corpo}</span>;
 }
 

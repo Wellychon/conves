@@ -354,7 +354,17 @@ function avisoConflitos() {
   const nomes = c.slice(0, 3).join(", ") + (c.length > 3 ? ", …" : "");
   return `⚠ ${c.length} nota${c.length > 1 ? "s" : ""} com conflito pausada${c.length > 1 ? "s" : ""}: ${nomes}. Compare com o arquivo .conflito-nuvem.md, edite a nota e apague o .conflito para retomar o envio.`;
 }
-const abs = (rel) => path.join(VAULT, ...rel.split("/"));
+// Caminho de nota vindo da nuvem é entrada não confiável: sem "..", sem absoluto, sem pasta/arquivo oculto
+// (.claude/ e .git/ poderiam instalar hooks e rodar código na máquina de quem sincroniza).
+const caminhoSeguro = (rel) =>
+  typeof rel === "string" && rel.length > 0 && rel.length < 500 && !/[\0\\]/.test(rel) && !path.isAbsolute(rel) &&
+  rel.split("/").every((p) => p !== "" && !p.startsWith("."));
+// Último muro: o caminho resolvido tem de ficar dentro do vault, qualquer que seja a origem.
+const abs = (rel) => {
+  const p = path.resolve(VAULT, ...String(rel).split("/"));
+  if (p !== VAULT && !p.startsWith(VAULT + path.sep)) throw new Error(`caminho fora do vault: ${rel}`);
+  return p;
+};
 const ler = (rel) => fs.readFileSync(abs(rel), "utf8");
 function gravar(rel, body) { fs.mkdirSync(path.dirname(abs(rel)), { recursive: true }); fs.writeFileSync(abs(rel), body); }
 const caminhoConflito = (rel, quem) => abs(rel).replace(/\.md$/, `.conflito-${quem}.md`);
@@ -375,6 +385,7 @@ async function ciclo({ silencioso = false, esperar = 0 } = {}) {
     // 1) puxa o que mudou na nuvem
     const remotas = await jtool("note", { op: "list", since: st.since ?? "1970-01-01T00:00:00Z", n: 1000 });
     for (const r of remotas) {
+      if (!caminhoSeguro(r.path)) { log(`⚠ ignorada (caminho inseguro): ${String(r.path).slice(0, 80)}`); continue; }
       const f = st.files[r.path] ?? {};
       const existe = fs.existsSync(abs(r.path));
       const localHash = existe ? hash(ler(r.path)) : null;
@@ -422,6 +433,8 @@ async function ciclo({ silencioso = false, esperar = 0 } = {}) {
         st.files[rel] = { version: r.note.version, hash: f?.hash, conflito: true };
         resumo.conflitos++;
         log(`⚠ conflito ao enviar ${rel}`);
+      } else if (r.note.path !== rel && !caminhoSeguro(r.note.path)) {
+        log(`⚠ ignorada (caminho inseguro): ${String(r.note.path).slice(0, 80)}`);
       } else if (r.note.path !== rel) {
         // o servidor arquivou a nota na pasta certa (pelo tipo): acompanha localmente
         gravar(r.note.path, r.note.body);
