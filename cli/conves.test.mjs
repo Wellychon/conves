@@ -245,7 +245,8 @@ describe("hook prompt", () => {
   const contexto = [
     { id: "l:aaaa1111", tipo: "aprendizado", texto: "regra: nunca editar o Mapa.md à mão", score: 0.4 },
     { id: "d:bbbb2222", tipo: "decisao", texto: "2026-11-05 Piena foca em automação — porque dados", score: 0.3 },
-    { id: "n:cccc3333", tipo: "nota", texto: "01 Ideias/Crew.md · trecho da nota", score: 0.2 },
+    { id: "n:cccc3333", tipo: "nota", texto: "01 Ideias/Crew.md · trecho da nota", score: 0.27 }, // acima do limiar (NOTA_MINIMA = 0,25 em politica.mjs)
+    { id: "n:eeee5555", tipo: "nota", texto: "ruido de plano de saude", score: 0.2 },         // logo abaixo do limiar: não entra
     { id: "n:dddd4444", tipo: "nota", texto: "fraca", score: 0.01 },
   ];
   test("imprime o contexto escolhido, não repete na mesma sessão e guarda ids", async () => {
@@ -255,6 +256,7 @@ describe("hook prompt", () => {
     assert.match(r.stdout, /^# Convés · contexto relevante\n- \[aprendizado\] regra: nunca/); // servidor antigo: sem aviso, sem envoltório
     assert.match(r.stdout, /- \[decisão\] 2026-11-05/); assert.match(r.stdout, /- \[nota\] 01 Ideias\/Crew\.md · trecho da nota \(leia o arquivo local se precisar\)/);
     assert.ok(!r.stdout.includes("fraca"));
+    assert.ok(!r.stdout.includes("ruido de plano de saude"), "score abaixo do limiar não deve ser injetado");
     assert.deepEqual(a.sessaoArq("p1").vistos.sort(), ["d:bbbb2222", "l:aaaa1111", "n:cccc3333"]);
     const r2 = await a.hook("prompt", { session_id: "p1", prompt: "de novo a Crew" });
     assert.equal(r2.stdout, "", "nada novo: não imprime nada");
