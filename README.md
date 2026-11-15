@@ -81,3 +81,7 @@ Se a mesma nota mudar dos dois lados, **ninguém é sobrescrito**: a versão da 
 | Pendências, contexto e "quem resolve" (claude/humano) | `/mcp__conves__minhas` | ~250 |
 
 Migrations 0006–0008: automação, executor/pendências, destinos e a pasta `00 Organização` (regras, mapa gerado, aprendizados das IAs).
+
+## Licença
+
+[MIT](LICENSE).
